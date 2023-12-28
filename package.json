@@ -14,8 +14,8 @@
   "keywords": [],
   "author": "Michael Rooplall",
   "devDependencies": {
-    "electron": "^8.2.3",
-    "electron-builder": "^22.6.0",
+    "electron": "20.0.0",
+    "electron-builder": "^20.15.0",
     "express": "^4.17.1"
   },
   "dependencies": {},

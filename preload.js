@@ -3,6 +3,12 @@
 
 const electron = require('electron');
 
+const { contextBridge, ipcRenderer } = require('electron')
+contextBridge.exposeInMainWorld('electronAPI', {
+  sendSync: (channel,args) => ipcRenderer.sendSync(channel,args),
+  on: (channel,callback) => ipcRenderer.on(channel,callback),
+})
+
 window.addEventListener('DOMContentLoaded', () => {
   const replaceText = (selector, text) => {
     const element = document.getElementById(selector)

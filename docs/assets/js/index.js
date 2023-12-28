@@ -34,7 +34,7 @@ let paired_device = {
 		paired_device.server 				= null;
 		paired_device.service 				= null;
 		paired_device.characteristic_map 	= [];
-		
+
 	}
 }
 
@@ -256,11 +256,11 @@ function prepareColorControllers(){
 
 		$(this).click(function(e){
 			e.preventDefault();
-			
+
 			let color = $(this).css("background-color");
 			console.log(color);
 			color_picker.color.set(color);
-			
+
 			if (paired_device.device_id){
 				setBulbColor(color_picker.color.rgb.r, color_picker.color.rgb.g, color_picker.color.rgb.b);
 			}
@@ -308,7 +308,7 @@ function getBulbColor(doUpdateUI){
 	}
 
 	paired_device.characteristic_map[DEFAULT_BULB_CONFIG.BULB_COLOR_CHARACTERISTIC_UUID].readValue().then(value => {
-		
+
 		let byteArray = getByteArrayFromDataview(value, "getUint8");
 
 		console.log("Bulb color -> ", byteArray);
@@ -369,14 +369,14 @@ function getBulbPowerState(doUpdateUI){
 	}
 
 	paired_device.characteristic_map[DEFAULT_BULB_CONFIG.BULB_POWER_CHARACTERISTIC_UUID].readValue().then(value => {
-		
+
 		let byteArray = getByteArrayFromDataview(value, "getUint8");
 
 		let state = (byteArray[0] == 79);
 
 		console.log("Bulb power state -> ", state, byteArray);
 
-		
+
 
 		if (doUpdateUI){
 			power_state.set(state);
@@ -429,7 +429,8 @@ function handleBluetoothScanner(){
 
 				console.log("Requesting Bluetooth Scan");
 
-				ipcRenderer.sendSync("bluetooth-state", {
+				// ipcRenderer.sendSync
+				window.electronAPI.sendSync("bluetooth-state", {
 					mode : "discovery"
 				})
 
@@ -520,11 +521,12 @@ function handleBluetoothScanner(){
 		return;
 	}
 
-	ipcRenderer.on("bluetooth-discovery-response", (event, response) => {
+	//ipcRenderer.on
+	window.electronAPI.on("bluetooth-discovery-response", (event, response) => {
 
 		let devices = response.devices;
 
-		// console.log(devices);
+		console.log(devices);
 
 		let device_map = {};
 
@@ -533,7 +535,7 @@ function handleBluetoothScanner(){
 			// If the item doesn't exist, create it
 			// If the item does exist, and the name is different, change it
 			// If the item shouldn't exist, remove it
-			
+
 			if (typeof device_map[device.deviceId] == "undefined"){
 				console.log(`Set ${device.deviceId} to ${device.deviceName} [${typeof device.deviceId}, ${typeof device.deviceName}]`);
 				device_map[device.deviceId] = device.deviceName;
@@ -557,7 +559,7 @@ function handleBluetoothScanner(){
 				bluetooth_item.children("button").click(function(e){
 					e.preventDefault();
 
-					let device_id = bluetooth_item.attr("device_id");					
+					let device_id = bluetooth_item.attr("device_id");
 
 					$(".bluetooth-list > .bluetooth-item:not(.template)").each(function(){
 						$(this).children("button").attr("disabled", true);
@@ -608,7 +610,8 @@ function requestDevicePair(device_id){
 
 	if (isElectron){
 
-		ipcRenderer.sendSync("bluetooth-state", {
+		//ipcRenderer.sendSync
+		window.electronAPI.sendSync("bluetooth-state", {
 			mode : "pairing",
 			deviceId : device_id
 		});
@@ -619,7 +622,7 @@ function requestDevicePair(device_id){
 
 		acceptAllDevices : true,
 		optionalServices : ["generic_access", "battery_service", "device_information", DEFAULT_BULB_CONFIG.BULB_SERVICE_UUID]
-	
+
 	}).then(device => {
 
 		console.log("==================================")
@@ -673,7 +676,7 @@ function requestDevicePair(device_id){
 			let doAsyncForEach = async () => {
 
 				await asyncForEach(characteristics, async (characteristic) => {
-					
+
 					paired_device.characteristic_map[characteristic.uuid] = characteristic;
 					console.log(`Characteristic: ${characteristic.uuid}`, characteristic)
 
@@ -688,7 +691,7 @@ function requestDevicePair(device_id){
 						}).catch((e) => {
 							console.log(e);
 						})
-						
+
 
 					} catch (e){
 						console.log(e);
@@ -704,14 +707,14 @@ function requestDevicePair(device_id){
 						}).catch((e) => {
 							console.log(e);
 						})
-						
+
 
 					} catch (e){
 						console.log(e);
 					}
 
 					*/
-	
+
 				})
 
 				console.log(paired_device);
@@ -730,7 +733,7 @@ function requestDevicePair(device_id){
 		Notification.set("Failed to pair to device", "pair-failure", 3);
 		$(".loading-overlay").fadeOut(100);
 	})
-	
+
 }
 
 
@@ -747,13 +750,13 @@ function developerPanel(){
 		console.log(paired_device.characteristic_map[characteristic_uuid]);
 
 		paired_device.characteristic_map[characteristic_uuid].readValue().then(value => {
-			
+
 			let byteArray = getByteArrayFromDataview(value, "getUint8");
 
 			console.log("Value", value, byteArray);
 
 			$("input.characteristic_value").val(byteArray.join(", "));
-			
+
 		})
 
 	})
@@ -810,21 +813,21 @@ function developerPanel(){
 			let doAsyncForEach = async () => {
 
 				await asyncForEach(characteristics, async (characteristic) => {
-					
+
 					try {
 
 						let value = await characteristic.readValue();
 						let byteArray = getByteArrayFromDataview(value, "getUint8");
 
 						console.log(`Value of ${characteristic.uuid} : ${byteArray}`);
-						
+
 						scan_instance[characteristic.uuid] = byteArray;
 
 					} catch (e) {
 						console.log(e);
 						scan_instance[characteristic.uuid] = "WRITE_ONLY";
 					}
-	
+
 				})
 
 				console.log("Sending . . .");
@@ -881,7 +884,7 @@ function developerPanel(){
 // HELPER METHODS
 
 function getByteArrayFromDataview(dataview, bufferType){
-							
+
 	if (typeof bufferType == "undefined"){
 		bufferType = "getUint8";
 	}

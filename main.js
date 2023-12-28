@@ -150,6 +150,8 @@ app.on("ready", function(){
 	ipcMain.on("bluetooth-state", (event, args) => {
 		// args.mode = "discovery" or "pairing"
 
+		console.log('bluetooth-state:'+args.mode);
+
 		if (args.mode !== "discovery" && args.mode !== "pairing"){
 			throw new Error(`Attempted to set bluetooth state manager to invalid state : ${args.mode}`);
 		}
@@ -164,7 +166,7 @@ app.on("ready", function(){
 			}
 
 			updateClientBluetoothDiscovery(true);
-			
+
 			event.returnValue = 200;
 			return;
 		}
@@ -271,7 +273,7 @@ app.on("ready", function(){
 
 		if (typeof first_record_timestamp == "undefined"){
 			first_record_timestamp = new Date();
-		} 
+		}
 
 		console.log("Recorded Bluetooth Device Service Characteristics");
 	})
@@ -299,7 +301,7 @@ app.on("ready", function(){
 
 		fs.writeFileSync(path.join(__dirname, `/dev/data_record.json`), prettyPrintArray(scanner_data), {flags: "w"});
 
-		
+
 	})
 
 	ipcMain.on("open-client-console", (event, args) => {
