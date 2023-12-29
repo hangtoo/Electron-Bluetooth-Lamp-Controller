@@ -5,8 +5,11 @@ const DEFAULT_BULB_CONFIG = {
 	BULB_MAC_QUICK_ADDR 			: "98:5D:AD:25:DB:90",
 	BULB_SERVICE_UUID1 				: "f000ffa0-0451-4000-b000-000000000000",
 	BULB_SERVICE_UUID 				: "0000180a-0000-1000-8000-00805f9b34fb",
+	BULB_SERVICE_UUID2 				: "00001101-0000-1000-8000-00805f9b34fb",
 	BULB_COLOR_CHARACTERISTIC_UUID 	: "f000ffa5-0451-4000-b000-000000000000",
-	BULB_POWER_CHARACTERISTIC_UUID  : "f000ffa3-0451-4000-b000-000000000000"
+	BULB_POWER_CHARACTERISTIC_UUID  : "f000ffa3-0451-4000-b000-000000000000",
+	BULB_23_CHARACTERISTIC_UUID  	: "00002a24-0000-1000-8000-00805f9b34fb",
+
 }
 
 let isElectron;
@@ -263,7 +266,17 @@ function prepareColorControllers(){
 			color_picker.color.set(color);
 
 			if (paired_device.device_id){
-				setBulbColor(color_picker.color.rgb.r, color_picker.color.rgb.g, color_picker.color.rgb.b);
+				// setBulbColor(color_picker.color.rgb.r, color_picker.color.rgb.g, color_picker.color.rgb.b);
+
+				let array_uint8 = new Uint8Array([0xA5,0x09,0x00,0x01,0x01,0x09,0x0D,0x0A]);
+
+				paired_device.characteristic_map[DEFAULT_BULB_CONFIG.BULB_23_CHARACTERISTIC_UUID].writeValue(array_uint8.buffer).then(() => {
+					console.log(`Pushed bulb color rgb(${r}, ${g}, ${b})`)
+				}).catch((e) => {
+					console.log("Failure", e);
+				});
+
+
 			}
 
 		})
@@ -437,9 +450,10 @@ function handleBluetoothScanner(){
 
 				$(this).removeAttr("disabled");
 
+				//"generic_access", "battery_service", "device_information",
 				navigator.bluetooth.requestDevice({
 					acceptAllDevices : true,
-					optionalServices : ["generic_access", "battery_service", "device_information", DEFAULT_BULB_CONFIG.BULB_SERVICE_UUID]
+					optionalServices : [DEFAULT_BULB_CONFIG.BULB_SERVICE_UUID]
 				}).then(device => {
 					console.log("Bluetooth Discovery Callback");
 				}).catch(error => {
@@ -682,7 +696,7 @@ function requestDevicePair(device_id){
 					paired_device.characteristic_map[characteristic.uuid] = characteristic;
 					console.log(`Characteristic: ${characteristic.uuid}`, characteristic)
 
-					/*
+					/**/
 
 					try {
 
@@ -715,7 +729,7 @@ function requestDevicePair(device_id){
 						console.log(e);
 					}
 
-					*/
+
 
 				})
 
@@ -776,15 +790,27 @@ function developerPanel(){
 
 		let array_uint8 = new Uint8Array(value_arr);
 
-		console.log(`Setting characteristic of ${characteristic_uuid} to array :`, value_arr, "buffer:", array_uint8);
-		console.log(paired_device.characteristic_map[characteristic_uuid]);
+		// console.log(`Setting characteristic of ${characteristic_uuid} to array :`, value_arr, "buffer:", array_uint8);
+		// console.log(paired_device.characteristic_map[characteristic_uuid]);
 
-		paired_device.characteristic_map[characteristic_uuid].writeValue(array_uint8.buffer).then(() => {
+		paired_device.writeValue(array_uint8.buffer).then(() => {
 			console.log("Success")
 		}).catch((e) => {
 			console.log("Failure", e);
 		});
 
+		// let characteristicMapElement = paired_device.characteristic_map[characteristic_uuid];
+		// const { write, writeWithoutResponse, read, notify } = characteristicMapElement.properties
+		// if(write||writeWithoutResponse){
+		// 	console.log("可写")
+		// 	characteristicMapElement.writeValue(array_uint8.buffer).then(() => {
+		// 		console.log("Success")
+		// 	}).catch((e) => {
+		// 		console.log("Failure", e);
+		// 	});
+		// }else{
+		// 	console.log("不可写")
+		// }
 
 	})
 

@@ -1,4 +1,7 @@
 const electron = require("electron")
+const {SerialPort} = require('serialport');
+const { ReadlineParser } = require('@serialport/parser-readline')
+
 // Module to control application life.
 const app = electron.app
 const remote = electron.remote
@@ -204,6 +207,28 @@ app.on("ready", function(){
 	})
 
 
+	mainWindow.webContents.session.on('select-serial-port', (event, portList, webContents, callback) => {
+		// Add listeners to handle ports being added or removed before the callback for `select-serial-port`
+		// is called.
+		mainWindow.webContents.session.on('serial-port-added', (event, port) => {
+			console.log('serial-port-added FIRED WITH', port)
+			// Optionally update portList to add the new port
+		})
+
+		mainWindow.webContents.session.on('serial-port-removed', (event, port) => {
+			console.log('serial-port-removed FIRED WITH', port)
+			// Optionally update portList to remove the port
+		})
+
+		event.preventDefault()
+		if (portList && portList.length > 0) {
+			callback(portList[0].portId)
+		} else {
+			// eslint-disable-next-line n/no-callback-literal
+			callback('') // Could not find any matching devices
+		}
+	})
+
 	mainWindow.webContents.on("select-bluetooth-device", (event, devices_list, callback) => {
 
 		event.preventDefault();
@@ -229,6 +254,75 @@ app.on("ready", function(){
 			if (result_device && bluetooth_state_manager.callback){
 				bluetooth_state_manager.callback(result_device.deviceId);
 			}
+
+			console.log('0.0.',result_device);
+
+			if(!!mainWindow.serialPort){
+				return;
+			}
+
+			// SerialPort.list().then(_=>{console.info(_);});
+			const serialPort = new SerialPort({
+				path:'/dev/tty.HC-02-SPP',
+				baudRate: 115200,
+				parity:'none',
+				stopBits:1,
+				dataBits:8,
+				flowControl: false,
+				autoOpen: false ,
+				parser: new ReadlineParser({ delimiter: '\r\n' })
+			}, function (err) {
+				if(err) {
+					console.error('0.',err);
+				}
+			});
+
+			mainWindow.serialPort=serialPort;
+
+			console.log('0.1.open,',serialPort.isOpen);
+			if(!serialPort.isOpen){
+				console.log('0.1.1.open,',serialPort.isOpen);
+				serialPort.open(function (err) {
+					if (err) {
+						return console.log('0.2.Error opening port: ', err.message)
+					}
+				})
+			}
+
+			serialPort.on('open',function (err) {
+				let array_uint8 = new Uint8Array([0xA5,0x09,0x00,0x01,0x01,0x09,0x0D,0x0A]);
+				// Because there's no callback to write, write errors will be emitted on the port:
+				serialPort.write(array_uint8, (err1)=>{
+					if (err1) {
+						return console.log('1.open,Error on write: ', err1.message)
+					}
+					console.log('1.1.open,',serialPort.isOpen);
+					console.log('1.2.open,message written')
+				});
+
+				if (err) {
+					return console.log('1.3.open,Error opening port: ', err.message,'-----------')
+				}
+			})
+
+			// console.info(serialPort);
+			// serialPort.write("A509000101090D0A", (err)=>{
+			// 	if (err) {
+			// 		return console.log('2.write,Error on write: ', err.message)
+			// 	}
+			// 	console.log('2.1.write,message written')
+			// });
+			serialPort.on('error', function(err) {
+				console.log('3.error,Error: ', err.message)
+			});
+
+			serialPort.on('data', function (data){
+				console.info('4.data,data', data);
+			});
+
+
+
+
 
 		} else {
 			throw new Error("Bluetooth State Manager - No Mode Set");
