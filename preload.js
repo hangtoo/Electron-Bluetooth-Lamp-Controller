@@ -6,6 +6,7 @@ const electron = require('electron');
 const { contextBridge, ipcRenderer } = require('electron')
 contextBridge.exposeInMainWorld('electronAPI', {
   sendSync: (channel,args) => ipcRenderer.sendSync(channel,args),
+  send: (channel,args) => ipcRenderer.send(channel,args),
   on: (channel,callback) => ipcRenderer.on(channel,callback),
 })
 

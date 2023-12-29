@@ -3,7 +3,8 @@
 
 const DEFAULT_BULB_CONFIG = {
 	BULB_MAC_QUICK_ADDR 			: "98:5D:AD:25:DB:90",
-	BULB_SERVICE_UUID 				: "f000ffa0-0451-4000-b000-000000000000",
+	BULB_SERVICE_UUID1 				: "f000ffa0-0451-4000-b000-000000000000",
+	BULB_SERVICE_UUID 				: "0000180a-0000-1000-8000-00805f9b34fb",
 	BULB_COLOR_CHARACTERISTIC_UUID 	: "f000ffa5-0451-4000-b000-000000000000",
 	BULB_POWER_CHARACTERISTIC_UUID  : "f000ffa3-0451-4000-b000-000000000000"
 }
@@ -472,7 +473,8 @@ function handleBluetoothScanner(){
 
 				$(".scan-btn").text("Scan");
 
-				ipcRenderer.send("bluetooth-state", {
+				//ipcRenderer.send
+				window.electronAPI.send("bluetooth-state", {
 					mode : "discovery",
 					stop : true
 				});
@@ -832,7 +834,8 @@ function developerPanel(){
 
 				console.log("Sending . . .");
 
-				ipcRenderer.send("data-recorder" , {
+				//ipcRenderer.send
+				window.electronAPI.send("data-recorder" , {
 					deviceId : bluetooth_deviceId,
 					serviceUUID : service.uuid,
 					time : new Date(),
@@ -850,7 +853,8 @@ function developerPanel(){
 
 	$("a.export_data").click(function(e){
 		e.preventDefault();
-		ipcRenderer.send("export-data");
+		// ipcRenderer.send
+		window.electronAPI.send("export-data");
 	})
 
 	//
@@ -875,7 +879,8 @@ function developerPanel(){
 
 	$("a.open_client_console").click(function(e){
 		e.preventDefault();
-		ipcRenderer.send("open-client-console");
+		// ipcRenderer.send
+		window.electronAPI.send("open-client-console");
 	})
 }
 
